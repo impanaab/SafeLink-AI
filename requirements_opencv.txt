@@ -1,0 +1,15 @@
+# SafeLink AI - OpenCV Shoulder Surfing Monitor
+# Minimal dependencies for standalone computer vision monitor
+# Install with: pip install -r requirements_opencv.txt
+
+# Computer Vision
+opencv-python==4.8.1.78
+numpy==1.24.3
+
+# Desktop Notifications
+plyer==2.1.0
+
+# Standard Library (no install needed)
+# - threading
+# - time
+# - datetime

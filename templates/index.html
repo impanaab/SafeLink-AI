@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeLink AI - Threat Detection Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="bg-glow glow-left"></div>
+    <div class="bg-glow glow-right"></div>
+
+    <div class="container">
+        <header class="hero">
+            <div>
+                <h1>SafeLink AI</h1>
+                <p class="subtitle">Advanced WiFi & Visual Threat Intelligence Console</p>
+            </div>
+            <div class="hero-badges">
+                <span class="hero-badge">Live Defense</span>
+                <span class="hero-badge subtle">Local Processing</span>
+            </div>
+        </header>
+
+        <div class="scan-section">
+            <button id="scanBtn" class="scan-button">Run Full Security Scan</button>
+            <p id="scanStatus" class="scan-status"></p>
+        </div>
+
+        <section class="telemetry-grid">
+            <article class="telemetry-card">
+                <p class="metric-label">Visible SSIDs</p>
+                <p id="metricSsids" class="metric-value">0</p>
+            </article>
+            <article class="telemetry-card">
+                <p class="metric-label">Access Points</p>
+                <p id="metricAps" class="metric-value">0</p>
+            </article>
+            <article class="telemetry-card">
+                <p class="metric-label">Threat Score</p>
+                <p id="metricThreatScore" class="metric-value">0</p>
+            </article>
+            <article class="telemetry-card">
+                <p class="metric-label">Threat Level</p>
+                <p id="metricThreatLevel" class="metric-value">SAFE</p>
+            </article>
+            <article class="telemetry-card">
+                <p class="metric-label">Recommended Network</p>
+                <p id="metricRecommendedNetwork" class="metric-value">--</p>
+            </article>
+            <article class="telemetry-card">
+                <p class="metric-label">Recent APs (60s)</p>
+                <p id="metricRecentAps" class="metric-value">0</p>
+            </article>
+            <article class="telemetry-card meter-card">
+                <div class="meter-head">
+                    <p class="metric-label">Risk Meter</p>
+                    <span id="meterStatusText">SAFE</span>
+                </div>
+                <div class="threat-meter">
+                    <div id="threatMeterFill" class="threat-meter-fill"></div>
+                </div>
+            </article>
+        </section>
+
+        <div class="dashboard">
+            <div class="card network-card">
+                <div class="card-header">
+                    <h2>Network Security</h2>
+                    <p>Evil Twin WiFi Attack Detection</p>
+                </div>
+
+                <div id="networkStatus" class="status-box status-pending">
+                    <p>Ready to scan. Live monitor will start automatically.</p>
+                </div>
+                <div id="networkMessage" class="message">
+                    Monitoring nearby WiFi fingerprints and threat indicators.
+                </div>
+
+                <div class="live-monitor">
+                    <span id="liveBadge" class="live-badge live-on">LIVE</span>
+                    <span id="liveInfo" class="live-info">Real-time WiFi scan every 5 seconds</span>
+                    <button id="toggleLiveBtn" class="live-toggle" type="button">Pause</button>
+                </div>
+                <div id="liveUpdatedAt" class="live-updated">Waiting for first live scan...</div>
+                <div id="connectedApInfo" class="connected-ap-info">Connected AP: Detecting...</div>
+
+                <div class="network-toolbar">
+                    <input id="networkSearchInput" class="toolbar-input" type="text" placeholder="Search SSID or MAC...">
+                    <select id="networkSortSelect" class="toolbar-select">
+                        <option value="score">Sort: Threat Score</option>
+                        <option value="signal">Sort: Signal Strength</option>
+                        <option value="name">Sort: SSID Name</option>
+                    </select>
+                    <label class="toolbar-check">
+                        <input id="showAllApsToggle" type="checkbox">
+                        Show all AP MAC addresses
+                    </label>
+                </div>
+
+                <div id="networkList" class="network-list" style="display: none;">
+                    <div class="network-head-row">
+                        <span>SSID</span>
+                        <span>Threat</span>
+                        <span>Signal</span>
+                        <span>BSSID</span>
+                    </div>
+                    <div id="networkItems" class="network-items"></div>
+                </div>
+            </div>
+
+            <div class="card visual-card">
+                <div class="card-header">
+                    <h2>Visual Privacy</h2>
+                    <p>Shoulder Surfing Attack Detection</p>
+                </div>
+                <div id="visualStatus" class="status-box status-pending">
+                    <p>Ready to scan webcam feed for shoulder surfing risk.</p>
+                </div>
+                <div id="visualMessage" class="message">
+                    Camera analytics stay local and do not upload frames.
+                </div>
+            </div>
+        </div>
+
+        <section class="insights-grid">
+            <article class="insight-card">
+                <div class="card-header">
+                    <h2>Threat Intelligence</h2>
+                    <p>Per-SSID scoring breakdown</p>
+                </div>
+                <p id="threatInsightsEmpty" class="insight-empty">No threat telemetry yet.</p>
+                <div id="threatInsightsList" class="threat-insight-list"></div>
+            </article>
+
+            <article class="insight-card">
+                <div class="card-header">
+                    <h2>Live Feed Summary</h2>
+                    <p>Operational details from the latest scan</p>
+                </div>
+                <ul class="summary-list">
+                    <li id="summaryConnected">Connected AP: Detecting...</li>
+                    <li id="summaryWindow">Recent window: 60 seconds</li>
+                    <li id="summaryPasses">Scan passes: -</li>
+                    <li id="summaryTimestamp">Last update: -</li>
+                </ul>
+            </article>
+        </section>
+
+        <footer>
+            <p>SafeLink AI v1.0 </p>
+           
+        </footer>
+    </div>
+
+    <script>
+        const scanBtn = document.getElementById('scanBtn');
+        const scanStatus = document.getElementById('scanStatus');
+
+        const networkStatusBox = document.getElementById('networkStatus');
+        const networkMessage = document.getElementById('networkMessage');
+        const networkList = document.getElementById('networkList');
+        const networkItems = document.getElementById('networkItems');
+
+        const liveBadge = document.getElementById('liveBadge');
+        const liveInfo = document.getElementById('liveInfo');
+        const toggleLiveBtn = document.getElementById('toggleLiveBtn');
+        const liveUpdatedAt = document.getElementById('liveUpdatedAt');
+        const connectedApInfo = document.getElementById('connectedApInfo');
+
+        const networkSearchInput = document.getElementById('networkSearchInput');
+        const networkSortSelect = document.getElementById('networkSortSelect');
+        const showAllApsToggle = document.getElementById('showAllApsToggle');
+
+        const visualStatusBox = document.getElementById('visualStatus');
+        const visualMessage = document.getElementById('visualMessage');
+
+        const metricSsids = document.getElementById('metricSsids');
+        const metricAps = document.getElementById('metricAps');
+        const metricThreatScore = document.getElementById('metricThreatScore');
+        const metricThreatLevel = document.getElementById('metricThreatLevel');
+        const metricRecentAps = document.getElementById('metricRecentAps');
+        const metricRecommendedNetwork = document.getElementById('metricRecommendedNetwork');
+
+        const threatMeterFill = document.getElementById('threatMeterFill');
+        const meterStatusText = document.getElementById('meterStatusText');
+
+        const threatInsightsList = document.getElementById('threatInsightsList');
+        const threatInsightsEmpty = document.getElementById('threatInsightsEmpty');
+
+        const summaryConnected = document.getElementById('summaryConnected');
+        const summaryWindow = document.getElementById('summaryWindow');
+        const summaryPasses = document.getElementById('summaryPasses');
+        const summaryTimestamp = document.getElementById('summaryTimestamp');
+
+        const LIVE_SCAN_INTERVAL_MS = 5000;
+        let liveScanTimer = null;
+        let liveScanEnabled = true;
+        let liveScanInFlight = false;
+        let latestNetworkPayload = null;
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function extractNetworkPayload(data) {
+            return {
+                status: data.network_status || data.status || 'error',
+                message: data.network_message || data.message || 'Scan failed',
+                networks: data.networks || [],
+                suspicious_ssids: data.suspicious_ssids || [],
+                duplicate_ssids: data.duplicate_ssids || [],
+                mixed_vendor_ssids: data.mixed_vendor_ssids || [],
+                bssid_changed_ssids: data.bssid_changed_ssids || [],
+                signal_anomaly_ssids: data.signal_anomaly_ssids || [],
+                threat_scores: data.threat_scores || {},
+                overall_threat_score: Number.isFinite(data.overall_threat_score) ? data.overall_threat_score : null,
+                connected_ap: data.connected_ap || null,
+                recent_live_networks: data.recent_live_networks || [],
+                recent_window_seconds: Number.isFinite(data.recent_window_seconds) ? data.recent_window_seconds : 60,
+                scan_passes_used: Number.isFinite(data.scan_passes_used) ? data.scan_passes_used : null,
+                scanned_at: data.scanned_at || null
+            };
+        }
+
+        function formatScanTime(isoDateTime) {
+            if (!isoDateTime) {
+                return 'just now';
+            }
+            const parsed = new Date(isoDateTime);
+            if (Number.isNaN(parsed.getTime())) {
+                return 'just now';
+            }
+            return parsed.toLocaleTimeString();
+        }
+
+        function updateStatusBox(statusBox, messageBox, status, message) {
+            let statusClass = '';
+            let icon = '';
+
+            switch (status) {
+                case 'safe':
+                    statusClass = 'status-safe';
+                    icon = 'SAFE';
+                    break;
+                case 'suspicious':
+                    statusClass = 'status-warning';
+                    icon = 'SUSPICIOUS';
+                    break;
+                case 'risk':
+                    statusClass = 'status-warning';
+                    icon = 'POSSIBLE EVIL TWIN';
+                    break;
+                case 'error':
+                    statusClass = 'status-error';
+                    icon = 'ERROR';
+                    break;
+                default:
+                    statusClass = 'status-pending';
+                    icon = 'UNKNOWN';
+            }
+
+            statusBox.className = `status-box ${statusClass}`;
+            statusBox.innerHTML = `<p><strong>${icon}</strong></p>`;
+            messageBox.textContent = message;
+        }
+
+        function setLiveMonitorState(enabled) {
+            if (enabled) {
+                liveBadge.textContent = 'LIVE';
+                liveBadge.className = 'live-badge live-on';
+                liveInfo.textContent = 'Real-time WiFi scan every 5 seconds';
+                toggleLiveBtn.textContent = 'Pause';
+            } else {
+                liveBadge.textContent = 'PAUSED';
+                liveBadge.className = 'live-badge live-paused';
+                liveInfo.textContent = 'Live WiFi scan paused';
+                toggleLiveBtn.textContent = 'Resume';
+            }
+        }
+
+        function updateConnectedApInfo(connectedAp) {
+            if (connectedAp && connectedAp.ssid && connectedAp.mac) {
+                connectedApInfo.textContent = `Connected AP: ${connectedAp.ssid} (${connectedAp.mac})`;
+                summaryConnected.textContent = `Connected AP: ${connectedAp.ssid} (${connectedAp.mac})`;
+                return;
+            }
+            connectedApInfo.textContent = 'Connected AP: Not connected';
+            summaryConnected.textContent = 'Connected AP: Not connected';
+        }
+
+        function getDisplayNetworks(payload) {
+            const currentNetworks = Array.isArray(payload.networks) ? payload.networks : [];
+            const recentNetworks = Array.isArray(payload.recent_live_networks) ? payload.recent_live_networks : [];
+
+            if (recentNetworks.length > currentNetworks.length) {
+                liveInfo.textContent = `Live now: ${currentNetworks.length} AP(s) | Recently seen (${payload.recent_window_seconds}s): ${recentNetworks.length} AP(s)`;
+                return recentNetworks;
+            }
+
+            if (payload.scan_passes_used) {
+                liveInfo.textContent = `Real-time WiFi scan every 5 seconds (${payload.scan_passes_used} quick passes per update)`;
+            }
+
+            return currentNetworks;
+        }
+
+        function toThreatLabel(status) {
+            if (status === 'risk') {
+                return 'POSSIBLE EVIL TWIN';
+            }
+            if (status === 'suspicious') {
+                return 'SUSPICIOUS';
+            }
+            if (status === 'safe') {
+                return 'SAFE';
+            }
+            return 'UNKNOWN';
+        }
+
+        function updateTelemetry(payload, displayNetworks) {
+            const groupedBySsid = {};
+            displayNetworks.forEach(network => {
+                const ssid = network.ssid || '[Unknown SSID]';
+                if (!groupedBySsid[ssid]) {
+                    groupedBySsid[ssid] = true;
+                }
+            });
+
+            const visibleSsids = Object.keys(groupedBySsid).length;
+            const accessPoints = displayNetworks.length;
+            const recentCount = Array.isArray(payload.recent_live_networks) ? payload.recent_live_networks.length : 0;
+
+            let overallScore = payload.overall_threat_score;
+            if (!Number.isFinite(overallScore)) {
+                const scoreValues = Object.values(payload.threat_scores || {}).map(item => item.score || 0);
+                overallScore = scoreValues.length ? Math.max(...scoreValues) : 0;
+            }
+
+            metricSsids.textContent = String(visibleSsids);
+            metricAps.textContent = String(accessPoints);
+            metricThreatScore.textContent = String(overallScore);
+            // Show recommended network
+            if (payload.recommended_network) {
+                metricRecommendedNetwork.textContent = payload.recommended_network;
+            } else if (displayNetworks.length > 0) {
+                // fallback: choose lowest threat score network
+                const safest = displayNetworks.reduce((a, b) =>
+                (a.threat || 0) < (b.threat || 0) ? a : b
+            );
+            metricRecommendedNetwork.textContent = safest.ssid || "None";
+        } else {
+            metricRecommendedNetwork.textContent = "None";
+        }
+        metricThreatLevel.textContent = toThreatLabel(payload.status);
+            metricRecentAps.textContent = String(recentCount);
+
+            const boundedScore = Math.max(0, Math.min(100, overallScore));
+            threatMeterFill.style.width = `${boundedScore}%`;
+            meterStatusText.textContent = toThreatLabel(payload.status);
+
+            summaryWindow.textContent = `Recent window: ${payload.recent_window_seconds}s`;
+            summaryPasses.textContent = `Scan passes: ${payload.scan_passes_used || '-'}`;
+            summaryTimestamp.textContent = `Last update: ${formatScanTime(payload.scanned_at)}`;
+        }
+
+        function renderThreatInsights(payload) {
+            const entries = Object.entries(payload.threat_scores || {})
+                .map(([ssid, details]) => ({
+                    ssid,
+                    score: details.score || 0,
+                    reasons: Array.isArray(details.reasons) ? details.reasons : [],
+                    label: details.label || 'SAFE'
+                }))
+                .sort((a, b) => b.score - a.score || a.ssid.localeCompare(b.ssid));
+
+            const interesting = entries.filter(item => item.score > 0);
+
+            if (interesting.length === 0) {
+                threatInsightsEmpty.style.display = 'block';
+                threatInsightsList.innerHTML = '';
+                threatInsightsEmpty.textContent = 'No active threat indicators in current telemetry.';
+                return;
+            }
+
+            threatInsightsEmpty.style.display = 'none';
+            threatInsightsList.innerHTML = interesting.map(item => {
+                const reasonsText = item.reasons.length ? item.reasons.join(' | ') : 'No explicit reason provided';
+                return `
+                    <div class="insight-row">
+                        <div class="insight-row-head">
+                            <strong>${escapeHtml(item.ssid)}</strong>
+                            <span class="score-pill">${item.score}</span>
+                        </div>
+                        <p class="insight-meta">${escapeHtml(item.label)} | ${escapeHtml(reasonsText)}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayNetworkList(payload) {
+            latestNetworkPayload = payload;
+            networkList.style.display = 'block';
+
+            updateConnectedApInfo(payload.connected_ap);
+            const displayNetworks = getDisplayNetworks(payload);
+            updateTelemetry(payload, displayNetworks);
+            renderThreatInsights(payload);
+
+            if (!displayNetworks.length) {
+                networkItems.innerHTML = '<div class="empty-row">No WiFi networks are currently visible.</div>';
+                return;
+            }
+
+            const groupedBySSID = {};
+            displayNetworks.forEach(network => {
+                const ssid = network.ssid || '[Unknown SSID]';
+                if (!groupedBySSID[ssid]) {
+                    groupedBySSID[ssid] = {
+                        entries: [],
+                        score: (payload.threat_scores && payload.threat_scores[ssid] && payload.threat_scores[ssid].score) || 0,
+                        isSuspicious: (payload.suspicious_ssids || []).includes(ssid)
+                    };
+                }
+                groupedBySSID[ssid].entries.push({
+                    mac: network.mac || 'N/A',
+                    signal: Number.isFinite(network.signal) ? network.signal : -1
+                });
+            });
+
+            const query = networkSearchInput.value.trim().toLowerCase();
+            const sortMode = networkSortSelect.value;
+            const showAllAps = showAllApsToggle.checked;
+
+            let rows = Object.keys(groupedBySSID).map(ssid => {
+                const row = groupedBySSID[ssid];
+                const connectedMac = payload.connected_ap && payload.connected_ap.ssid === ssid
+                    ? payload.connected_ap.mac
+                    : null;
+
+                const strongestEntry = [...row.entries].sort((a, b) => b.signal - a.signal)[0] || { mac: 'N/A', signal: -1 };
+                const selectedEntry = connectedMac
+                    ? (row.entries.find(item => item.mac === connectedMac) || strongestEntry)
+                    : strongestEntry;
+
+                return {
+                    ssid,
+                    score: row.score,
+                    isSuspicious: row.isSuspicious,
+                    apCount: row.entries.length,
+                    connectedMac,
+                    strongestSignal: strongestEntry.signal,
+                    selectedMac: selectedEntry.mac,
+                    entries: row.entries
+                };
+            });
+
+            if (query) {
+                rows = rows.filter(row => {
+                    if (row.ssid.toLowerCase().includes(query)) {
+                        return true;
+                    }
+                    return row.entries.some(entry => String(entry.mac).toLowerCase().includes(query));
+                });
+            }
+
+            if (sortMode === 'name') {
+                rows.sort((a, b) => a.ssid.localeCompare(b.ssid));
+            } else if (sortMode === 'signal') {
+                rows.sort((a, b) => b.strongestSignal - a.strongestSignal);
+            } else {
+                rows.sort((a, b) => b.score - a.score || b.strongestSignal - a.strongestSignal);
+            }
+
+            if (!rows.length) {
+                networkItems.innerHTML = '<div class="empty-row">No networks match your filter.</div>';
+                return;
+            }
+
+            networkItems.innerHTML = rows.map(row => {
+                let bssidHtml = '';
+
+                if (showAllAps) {
+                    bssidHtml = row.entries
+                        .sort((a, b) => b.signal - a.signal)
+                        .map(entry => {
+                            const connectedTag = row.connectedMac && row.connectedMac === entry.mac
+                                ? ' <span class="connected-tag">CONNECTED</span>'
+                                : '';
+                            const signalText = entry.signal >= 0 ? ` (${entry.signal}%)` : '';
+                            return `${escapeHtml(entry.mac)}${signalText}${connectedTag}`;
+                        })
+                        .join('<br>');
+                } else {
+                    const connectedTag = row.connectedMac && row.connectedMac === row.selectedMac
+                        ? ' <span class="connected-tag">CONNECTED</span>'
+                        : '';
+                    const signalText = row.strongestSignal >= 0 ? ` (${row.strongestSignal}%)` : '';
+                    bssidHtml = `${escapeHtml(row.selectedMac)}${signalText}${connectedTag}`;
+                }
+
+                const signalBadge = row.strongestSignal >= 0 ? `${row.strongestSignal}%` : '--';
+                const scoreClass = row.score > 60 ? 'pill-risk' : (row.score > 30 ? 'pill-warn' : 'pill-safe');
+                const rowClass = row.isSuspicious ? 'network-row suspicious' : 'network-row';
+
+                return `
+                    <div class="${rowClass}">
+                        <div class="cell ssid-cell">
+                            <strong>${escapeHtml(row.ssid)}</strong>
+                            <span class="ap-count">APs: ${row.apCount}</span>
+                        </div>
+                        <div class="cell"><span class="score-pill ${scoreClass}">${row.score}</span></div>
+                        <div class="cell"><span class="signal-pill">${signalBadge}</span></div>
+                        <div class="cell bssid-cell">${bssidHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function applyNetworkState(payload) {
+            updateStatusBox(networkStatusBox, networkMessage, payload.status, payload.message);
+            displayNetworkList(payload);
+            // Detect similar SSID names (possible evil twin)
+            if (payload.similar_ssid_pairs && payload.similar_ssid_pairs.length > 0) {
+                let warning = "⚠ Possible Evil Twin Networks Detected: ";
+                payload.similar_ssid_pairs.forEach(pair => {
+                    warning += pair[0] + " ↔ " + pair[1] + "   ";
+                });
+                networkMessage.textContent = warning;
+            }
+            if (payload.scanned_at) {
+                liveUpdatedAt.textContent = `Last live update: ${formatScanTime(payload.scanned_at)}`;
+            }
+        }
+
+        async function runLiveNetworkScan() {
+            if (!liveScanEnabled || liveScanInFlight) {
+                return;
+            }
+
+            liveScanInFlight = true;
+            try {
+                const response = await fetch('/api/networks', {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Live scan failed with HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const payload = extractNetworkPayload(data);
+                applyNetworkState(payload);
+            } catch (error) {
+                console.error('Live WiFi scan error:', error);
+                liveUpdatedAt.textContent = 'Last live update failed. Retrying automatically...';
+            } finally {
+                liveScanInFlight = false;
+            }
+        }
+
+        function startLiveNetworkMonitor() {
+            if (liveScanTimer) {
+                clearInterval(liveScanTimer);
+            }
+            runLiveNetworkScan();
+            liveScanTimer = setInterval(runLiveNetworkScan, LIVE_SCAN_INTERVAL_MS);
+        }
+
+        scanBtn.addEventListener('click', async () => {
+            if (liveScanTimer) {
+                clearInterval(liveScanTimer);
+                liveScanTimer = null;
+            }
+
+            scanBtn.disabled = true;
+            scanBtn.textContent = 'Scanning...';
+            scanStatus.textContent = 'Security scan in progress. Please wait...';
+            scanStatus.className = 'scan-status scanning';
+
+            networkStatusBox.className = 'status-box status-scanning';
+            networkStatusBox.innerHTML = '<p>Scanning WiFi environment...</p>';
+            networkMessage.textContent = 'Analyzing network threat posture...';
+
+            visualStatusBox.className = 'status-box status-scanning';
+            visualStatusBox.innerHTML = '<p>Analyzing webcam feed...</p>';
+            visualMessage.textContent = 'Processing shoulder surfing indicators...';
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Scan failed with HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const payload = extractNetworkPayload(data);
+                applyNetworkState(payload);
+
+                updateStatusBox(
+                    visualStatusBox,
+                    visualMessage,
+                    data.visual_status,
+                    data.visual_message + " | Faces detected: " + data.visual_faces
+                );
+
+                scanStatus.textContent = 'Full security scan completed.';
+                scanStatus.className = 'scan-status success';
+            } catch (error) {
+                console.error('Scan error:', error);
+                scanStatus.textContent = 'Error: Scan failed. Please try again.';
+                scanStatus.className = 'scan-status error';
+
+                networkStatusBox.className = 'status-box status-error';
+                networkStatusBox.innerHTML = '<p>Scan error occurred</p>';
+
+                visualStatusBox.className = 'status-box status-error';
+                visualStatusBox.innerHTML = '<p>Scan error occurred</p>';
+            }
+
+            scanBtn.disabled = false;
+            scanBtn.textContent = 'Run Full Security Scan';
+
+            if (liveScanEnabled) {
+                startLiveNetworkMonitor();
+            }
+        });
+
+        toggleLiveBtn.addEventListener('click', () => {
+            liveScanEnabled = !liveScanEnabled;
+            setLiveMonitorState(liveScanEnabled);
+
+            if (liveScanEnabled) {
+                startLiveNetworkMonitor();
+            } else if (liveScanTimer) {
+                clearInterval(liveScanTimer);
+                liveScanTimer = null;
+            }
+        });
+
+        networkSearchInput.addEventListener('input', () => {
+            if (latestNetworkPayload) {
+                displayNetworkList(latestNetworkPayload);
+            }
+        });
+
+        networkSortSelect.addEventListener('change', () => {
+            if (latestNetworkPayload) {
+                displayNetworkList(latestNetworkPayload);
+            }
+        });
+
+        showAllApsToggle.addEventListener('change', () => {
+            if (latestNetworkPayload) {
+                displayNetworkList(latestNetworkPayload);
+            }
+        });
+
+        setLiveMonitorState(true);
+        startLiveNetworkMonitor();
+    </script>
+</body>
+</html>

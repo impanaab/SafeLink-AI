@@ -1,0 +1,169 @@
+<!-- 
+WiFi Network Table - Usage Example
+===================================
+
+This file shows how to use the new WiFi network table styles
+added to style.css for the SafeLink AI dashboard.
+-->
+
+<!-- Basic WiFi Network Table Structure -->
+<div class="wifi-table-container">
+    <table class="wifi-table">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Network Name (SSID)</th>
+                <th>MAC Address (BSSID)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Safe Network Row -->
+            <tr>
+                <td>
+                    <span class="status-indicator status-safe"></span>
+                </td>
+                <td>
+                    <span class="ssid-name">
+                        <span class="network-icon">📡</span>
+                        MyHomeNetwork
+                    </span>
+                </td>
+                <td>
+                    <span class="mac-address">AA:BB:CC:DD:EE:FF</span>
+                </td>
+            </tr>
+
+            <!-- Suspicious Network Row (Evil Twin) -->
+            <tr class="suspicious">
+                <td>
+                    <span class="status-indicator status-suspicious"></span>
+                </td>
+                <td>
+                    <span class="ssid-name">
+                        <span class="network-icon">📡</span>
+                        CoffeeShopWiFi
+                        <span class="suspicious-badge">⚠️ Evil Twin</span>
+                    </span>
+                </td>
+                <td>
+                    <span class="mac-address">11:22:33:44:55:66</span>
+                </td>
+            </tr>
+
+            <!-- Another Suspicious Network Row -->
+            <tr class="suspicious">
+                <td>
+                    <span class="status-indicator status-suspicious"></span>
+                </td>
+                <td>
+                    <span class="ssid-name">
+                        <span class="network-icon">📡</span>
+                        CoffeeShopWiFi
+                        <span class="suspicious-badge">⚠️ Evil Twin</span>
+                    </span>
+                </td>
+                <td>
+                    <span class="mac-address">77:88:99:00:AA:BB</span>
+                </td>
+            </tr>
+
+            <!-- Another Safe Network -->
+            <tr>
+                <td>
+                    <span class="status-indicator status-safe"></span>
+                </td>
+                <td>
+                    <span class="ssid-name">
+                        <span class="network-icon">📡</span>
+                        LibraryWiFi
+                    </span>
+                </td>
+                <td>
+                    <span class="mac-address">FF:EE:DD:CC:BB:AA</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 
+JavaScript Example: Dynamically Generate Table from scan_wifi() results
+========================================================================
+-->
+<script>
+function displayNetworksAsTable(networks, suspiciousSSIDs) {
+    const tableHTML = `
+        <div class="wifi-table-container">
+            <table class="wifi-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Network Name (SSID)</th>
+                        <th>MAC Address (BSSID)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${networks.map(network => {
+                        const isSuspicious = suspiciousSSIDs.includes(network.ssid);
+                        return `
+                            <tr${isSuspicious ? ' class="suspicious"' : ''}>
+                                <td>
+                                    <span class="status-indicator ${isSuspicious ? 'status-suspicious' : 'status-safe'}"></span>
+                                </td>
+                                <td>
+                                    <span class="ssid-name">
+                                        <span class="network-icon">📡</span>
+                                        ${network.ssid}
+                                        ${isSuspicious ? '<span class="suspicious-badge">⚠️ Evil Twin</span>' : ''}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="mac-address">${network.mac}</span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    // Insert into your container
+    document.getElementById('networkTableContainer').innerHTML = tableHTML;
+}
+
+// Example usage:
+const networks = [
+    {ssid: "MyNetwork", mac: "AA:BB:CC:DD:EE:FF"},
+    {ssid: "CoffeeWiFi", mac: "11:22:33:44:55:66"},
+    {ssid: "CoffeeWiFi", mac: "77:88:99:00:AA:BB"}
+];
+const suspicious = ["CoffeeWiFi"];
+
+displayNetworksAsTable(networks, suspicious);
+</script>
+
+<!-- 
+CSS Classes Reference:
+======================
+
+.wifi-table-container   - Outer container with dark background
+.wifi-table             - Main table element
+.suspicious             - Add to <tr> for suspicious/evil twin networks
+.suspicious-badge       - Badge showing "Evil Twin" warning
+.mac-address            - MAC address styling (monospace)
+.ssid-name              - SSID name styling
+.network-icon           - Network icon (📡)
+.status-indicator       - Circular status dot
+.status-safe            - Green indicator for safe networks
+.status-suspicious      - Red pulsing indicator for suspicious networks
+
+Features:
+- Dark theme with gradient headers
+- White text on dark background
+- Highlighted rows for suspicious networks (red background)
+- Hover effects on rows
+- Responsive design (works on mobile)
+- Smooth animations
+- Pulsing alert for suspicious networks
+-->

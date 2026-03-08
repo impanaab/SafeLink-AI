@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeLink AI</title>
+    <style>
+        body {
+            width: 300px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 13px;
+            text-align: center;
+        }
+        .status.active {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid rgba(76, 175, 80, 0.6);
+        }
+        .status.inactive {
+            background: rgba(158, 158, 158, 0.3);
+            border: 1px solid rgba(158, 158, 158, 0.6);
+        }
+        .info {
+            font-size: 12px;
+            line-height: 1.6;
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+        button {
+            width: 100%;
+            padding: 8px 12px;
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 SafeLink AI</h1>
+    
+    <div class="status inactive" id="status">
+        <strong>● Status:</strong><br>
+        <span id="statusText">Monitoring Inactive</span>
+    </div>
+    
+    <div class="info">
+        <strong>How it works:</strong><br>
+        • Detects login pages<br>
+        • Activates camera monitoring<br>
+        • Alerts on shoulder surfing risk
+    </div>
+    
+    <button onclick="checkStatus()">Check Status</button>
+    <button onclick="openGitHub()" style="margin-top: 5px; font-size: 11px; opacity: 0.8;">ℹ Help</button>
+    
+    <script>
+        // Check backend status when popup opens
+        function checkStatus() {
+            fetch('http://127.0.0.1:5001/status')
+                .then(r => r.json())
+                .then(data => {
+                    const statusDiv = document.getElementById('status');
+                    const statusText = document.getElementById('statusText');
+                    
+                    if (data.camera_active) {
+                        statusDiv.className = 'status active';
+                        statusText.textContent = '● Monitoring Active\nCamera is running';
+                    } else {
+                        statusDiv.className = 'status inactive';
+                        statusText.textContent = '● Monitoring Inactive\nWaiting for login page...';
+                    }
+                })
+                .catch(e => {
+                    document.getElementById('statusText').textContent = '✗ Backend not running\nStart: python safelink_monitor.py';
+                });
+        }
+        
+        function openGitHub() {
+            chrome.tabs.create({ url: 'https://github.com' });
+        }
+        
+        checkStatus();
+    </script>
+</body>
+</html>
