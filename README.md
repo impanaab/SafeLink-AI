@@ -312,7 +312,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-**Your Name** - *Initial work* - [YourGitHub](https://github.com/impanaab)
+**Your Name** -  [B Impanaa](https://github.com/impanaab)
 
 ---
 
@@ -330,8 +330,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions, suggestions, or collaboration:
 
 - **Email**: impanaab65@gmail.com
-- **GitHub**: [@yourusername](https://github.com/impanaab)
-- **LinkedIn**: [Your Name](https://linkedin.com/in/impanaab)
+- **GitHub**: [@impanaab](https://github.com/impanaab)
+- **LinkedIn**: [Impanaa B](https://linkedin.com/in/impanaab)
 
 ---
 
