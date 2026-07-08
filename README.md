@@ -312,7 +312,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-**Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+**Your Name** - *Initial work* - [YourGitHub](https://github.com/impanaab)
 
 ---
 
@@ -329,9 +329,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions, suggestions, or collaboration:
 
-- **Email**: your.email@example.com
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-- **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
+- **Email**: impanaab65@gmail.com
+- **GitHub**: [@yourusername](https://github.com/impanaab)
+- **LinkedIn**: [Your Name](https://linkedin.com/in/impanaab)
 
 ---
 
